@@ -635,7 +635,10 @@ def connect_db():
     if isAdmin:
         return sqlite3.connect('working.sqlite3'),sqlite3.connect('user.sqlite3')
     else:
-        return sqlite3.connect('file:///Users/jitianbo/Documents/Database/Project_Website/working.sqlite3?mode=ro',uri=True),sqlite3.connect('user.sqlite3')
+        abs_path=os.path.abspath('working.sqlite3')
+        uri_abs_path="file://"+abs_path+'?mode=ro'
+        return sqlite3.connect(uri_abs_path,uri=True),sqlite3.connect('user.sqlite3')
+        # return sqlite3.connect('file://working.sqlite3?mode=ro',uri=True),sqlite3.connect('user.sqlite3')
 
 @app.before_request
 def before_request():
