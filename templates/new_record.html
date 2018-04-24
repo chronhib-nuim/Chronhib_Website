@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block head %}
+<title>New Record</title>
+
+<script type="text/javascript">
+    window.onload=function(){
+        {%for col in cols_morphology%}
+        var ele=document.getElementById("td_morphology_{{col}}");
+        if(ele){
+            ele.addEventListener('input',function(){
+                var value=document.getElementById("td_morphology_{{col}}").innerHTML;
+                document.getElementById("morphology_{{col}}").value=value;
+            });
+        }
+        {%endfor%}
+    };
+    
+    function queryWord(){
+      console.log('word');
+    };
+
+    function queryLemma(){
+        var hdword = document.getElementById("morphology_Lemma").value;
+        if(hdword.length>0){
+            $.getJSON('/new_record/_query_lemmata?lemma='+encodeURIComponent(hdword),function(data){
+                if(jQuery.isEmptyObject(data)){
+                    Toast("Found no record with lemma '"+hdword+"'",1000);
+                }
+                else{
+                  for(var d in data){
+                    document.getElementById("lemmata_"+d).innerHTML=data[d];
+                  }
+                }
+                
+            });
+        }
+       
+    };
+
+    function querySentenceID(){
+      var sentenceid = document.getElementById("morphology_SentenceID").value;
+      if(sentenceid.length>0){
+          $.getJSON('/new_record/_query_sentence?sentenceid='+encodeURIComponent(sentenceid),function(data){
+              if(jQuery.isEmptyObject(data)){
+                  Toast("Found no record with SentenceID '"+sentenceid+"'",1000);
+              }
+              else{
+                  for(var d in data){
+                    document.getElementById("sentences_"+d).innerHTML=data[d];
+                  }
+              }
+              
+          });
+      }
+        
+    };
+
+    function post_to_server() {
+        var form=$("#data-form");
+        console.log(form.serialize());
+        $.post("/new_record/insert", form.serialize(),function(data) {
+            if(data.hasOwnProperty("error")){
+                alert(data["error"]);
+            }
+            else{
+                window.location.href='/working/?row_number='+data["success"]+"&from_row=1"
+            }
+            
+        });
+        
+        return false;
+    };
+</script>
+{% endblock %}
+
+{% block body %}
+
+<ul>
+    <li class='li-left'><a onclick="window.location.href='/'">Home</a></li>
+    <li class='li-left active'><a>New Record</a></li>
+    <div class="dropdown li-left">
+      <a class="dropbtn">Tables</a>
+      <div class="dropdown-content">
+        <a href="/morphology/">MORPHOLOGY</a>
+        <a href="/lemmata/">LEMMATA</a>
+        <a href="/sentence/">SENTENCES</a>
+        <a href="/changes/">CHANGES</a>
+      </div>
+    </div>
+    <li class='li-left'><a onclick="showSymbolsTable()">Symbol</a></li>
+    
+    <li class='li-left'></li>
+    <li class='li-right' onclick="user_logout()"><a>Logout</a></li>
+</ul>
+
+<div style="padding:20px;margin-top:30px;">
+
+
+<div style="width:100%;" align="center">
+{% block symbol %}
+{{super()}}
+{% endblock %}
+</div>
+
+
+
+<!-- <form id="data-form" action="/add_new/insert" method="post" onsubmit="return post_to_server();"> -->
+
+<div style="width:50%;float:left;">
+  <h1 align="center">Morphology</h1>
+  <form id="data-form" action="/new_record/insert" method="post" onsubmit="return post_to_server();">
+  <div style="border-style: solid;">
+
+    <table width="100%" cellspacing="0" border="1">
+      {% for col in cols_morphology %}
+        {% if col != "ID_unique_number"%}
+        <tr>
+            {%if col in not_empty%} 
+            <td width="30%" style="height: auto;word-break:break-all;cursor: pointer;" onclick="query{{col}}()"><b>{{col}}</b></td>
+            {%else%}
+            <td width="30%" style="height: auto;word-break:break-all;">{{col}}</td>
+            {%endif%}
+            <td id="td_morphology_{{col}}" width="70%" style="height: auto;word-break:break-all;background-color: #CCFFFF;" contenteditable="true"></td>
+            <input type="text" name="{{col}}" id="morphology_{{col}}" style="display: none;">
+        </tr>
+
+        
+        {%endif%}
+        {%endfor%}
+      </table>
+    </div>
+  <div align="center">
+    <br>
+    <button class="button button-primary button-rounded button-small" type="submit">Submit</button>
+  </div>
+  </form>
+</div>
+
+
+
+
+
+
+<div style="width:10%;float:left;">
+    <h1>&emsp;</h1>
+</div>
+
+
+
+
+
+<div style="width:40%;float:left;left:60%" align="center">
+  <h1 align="center">Lemmata</h1>
+  <div style="border-style: solid;">
+    <table border="1" width="90%">
+      
+
+      {% for col in cols_lemmata %}
+      {% if col != "ID_unique_number" %}
+      <tr>
+          <td width="40%">{{col}} </td>
+          <td width="60%" id="lemmata_{{col}}" style="height: auto;word-break:break-all;"></td>
+      </tr>
+      {%else%}
+      <td id="lemmata_{{col}}" style="display:none;"></td>
+      {%endif%}
+      {%endfor%}
+    </table>
+    
+  </div>
+
+  <br>
+  
+
+  <h1>SENTENCES</h1>
+  <div style="border-style: solid;">
+    <br>
+    <table border="1" width="90%">
+      {% for col in cols_sentences %}
+      {% if col != "ID_unique_number" %}
+      <tr>
+          <td width="40%">{{col}}</td>
+          <td width="60%" id="sentences_{{col}}" style="height: auto;word-break:break-all;"></td>
+      </tr>
+      {%else%}
+      <td id="sentences_{{col}}" style="display:none;"></td>
+      {% endif %}
+      {% endfor%}
+    </table>
+  </div>
+  <br>
+  <h1>Changes (for test only)</h1>
+  <div style="overflow:auto;width:100%;height: 300px;border-style: solid;">
+    <br>
+    <br>
+  </div>
+
+</div>
+</div>
+
+{% endblock %}

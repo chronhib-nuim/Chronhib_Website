@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block head %}
+<title>Add New</title>
+<script type="text/javascript">
+    window.onload=function(){
+        {%for col in column_names%}
+        var ele=document.getElementById("td_{{col}}");
+        if(ele){
+            ele.addEventListener('input',function(){
+                var value=document.getElementById("td_{{col}}").innerHTML;
+                document.getElementById("{{col}}").value=value;
+            });
+        }
+        {%endfor%}
+    };
+    function post_to_server() {
+        var form=$("#data-form");
+        var url = form.attr('action'); 
+        console.log(form.serialize());
+        $.post(url, form.serialize(),function(data) {
+            if(data.hasOwnProperty("error")){
+                alert(data["error"]);
+            }
+            else{
+                window.location.href='/{{table_name}}/'+data["success"]+'/'
+            }
+        });
+        
+        return false;
+    };
+</script>
+
+{% endblock %}
+
+{% block body %}
+<body>
+<ul>
+    <li class='li-left'><a onclick="window.location.href='/'">Home</a></li>
+    <div class="dropdown li-left">
+      <a class="dropbtn active" href="/{{table_name}}/">{{table_name}}</a>
+      <div class="dropdown-content">
+        {% for t in other_tables%}
+        <a href="/{{t}}/">{{t}}</a>
+        {% endfor%}
+      </div>
+    </div>
+
+    
+    {% if is_login %}
+    <li class='li-right' onclick="user_logout()"><a>Logout</a></li>
+    {% else %}
+    <li class='li-right' ><a href="/login/">Login</a></li>
+    {% endif %}
+</ul>
+
+<div align="center">
+    <form id="data-form" action="/{{table_name}}/add_new/insert" method="post" onsubmit="return post_to_server();">
+    <table border="1" width="70%" style="height: auto;font-size:30px;">
+        {%for col in column_names%}
+
+        <tr>
+            <td style="width: 25%;">{{col}}{%if col in non_empty%}*{%endif%}</td>
+            {%if col != "ID_unique_number"%}
+            <td style="width: 75%;" contenteditable="true" id="td_{{col}}">{%if col=="SentenceID"%}{{next_sentenceID}}{%endif%}</td>
+            <input type="text" name="{{col}}" id="{{col}}" style="visibility: hidden;" {%if col=="SentenceID"%}value="{{next_sentenceID}}"{%endif%}>
+            {%else%}
+            <td style="width: 75%;" align="center">auto-generate</td>
+            {%endif%}
+        </tr>
+        {%endfor%}
+    </table>
+    <br>
+    <button class="button button-pill button-primary" type="submit">Submit</button>
+    </form>
+    
+</div>
+
+
+</body>
+
+{% endblock %}

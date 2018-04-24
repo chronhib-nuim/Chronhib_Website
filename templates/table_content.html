@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block head %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/table.css') }}">
+<title>{{table_name}}</title>
+<script type="text/javascript">
+    function slideSearch() {
+      $("#search").slideToggle("fast");
+      $("#symbol").slideToggle("fast");
+      hideSymbolsTable();
+    }
+
+    function toPage(page){
+        window.location.href="/{{table_name}}/?page="+page
+    }
+    function changeRowByArrowKey(event){
+        //make sure the cursor is not in any input field
+        if(!$(event.target).is('input')&&!$(event.target).is('textarea')){
+            // left arrow
+            if( (event.keyCode==37||event.which==37)&&("{{current_page}}">1) ){
+                toPage("{{current_page-1}}");
+            };
+            // right arrow
+            if( (event.keyCode==39||event.which==39)&&(parseInt("{{current_page}}")<parseInt("{{max_page}}")) ){
+                toPage("{{current_page+1}}");
+            };  
+        }
+      };
+      function toCertainPage(event){
+        var page_input = $("#page_number");
+        if(event.keyCode==13||event.which==13){
+            var page_number=page_input.val();
+            page_number=parseInt(page_number);
+            
+            if(page_number==parseInt('{{current_page}}')){
+              console.log(1);
+              page_input.val("{{current_page}}");
+            }
+            else if(page_number<=0 || page_number>parseInt('{{max_page}}') || isNaN(page_number)){
+              console.log(2);
+              page_input.val("{{current_page}}");
+              Toast("Please input a number within range",500);
+            }
+            else{
+              console.log(3);
+              toPage(page_number);
+            }
+
+           
+        };
+
+    };
+</script>
+<style type="text/css">
+  .sql_query{
+        cursor: pointer;
+        text-decoration:none;
+    }
+  .sql_query:link{
+        color: blue;
+  }             
+  .sql_query:visited{
+      color: blue;
+  } 
+  .sql_query:hover{
+      color: red;
+  }
+  .sql_query:active{
+      color: red;
+  } 
+</style>
+{% endblock %}
+{% block body %}
+<body onkeydown="changeRowByArrowKey(event)">
+
+<ul>
+    <li class='li-left'><a onclick="window.location.href='/'">Home</a></li>
+    <div class="dropdown li-left">
+      <a class="dropbtn active">{{table_name}}</a>
+      <div class="dropdown-content">
+        {% for t in other_tables%}
+        <a href="/{{t}}/">{{t}}</a>
+        {% endfor%}
+      </div>
+    </div>
+    {% if is_admin %}<li class='li-left'><a href="/{{table_name}}/add_new/">Add New</a></li>{%endif%}
+    
+    <li class='li-left'><a onclick="slideSearch()">Search</a></li>
+    <li class='li-left' id="symbol" style="display: none"><a onclick="showSymbolsTable()">Symbol</a></li>
+    {% if is_login %}
+    <li class='li-right' onclick="user_logout()"><a>Logout</a></li>
+    {% else %}
+    <li class='li-right' ><a href="/login/">Login</a></li>
+    {% endif %}
+</ul>
+<font size="2">
+<section>
+  <!--for demo wrap-->
+  <h1 align="center">{{table_name}}</h1>
+  <div id="search" style="display: none;border-style: solid;width: 100%" align="center"> 
+      <p align="center" >search</p>
+      <div style="width: 100%" align="center">
+      {% block symbol %}
+      {{super()}}
+      {% endblock %}
+      </div>
+
+      <table border="0">
+          <tr>
+              <td>1</td>
+              <td><input type="text" name=""></td>
+          </tr>
+          <tr>
+              <td>1</td>
+              <td><input type="text" name=""></td>
+          </tr>
+
+      </table>
+      <h2 align="right"><a class="sql_query" href="/sql/"> sql query </a></h2>
+  </div>
+  <div class="tbl-header">
+    <table class="table_info" cellpadding="0" cellspacing="0" border="0">
+      <thead>
+        <tr>
+          {% for th in tr_ths %}
+          <th class="table_th">{{th}}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+    </table>
+  </div>
+  <div class="tbl-content">
+    <table class="table_info" cellpadding="0" cellspacing="0" border="0">
+      <tbody>
+        {% for line in table_data%}
+        <tr class='line' onclick="window.location.href='/{{table_name}}/{{line[0]}}/'">
+          {% for i in line%}
+          <td class="table_td">{{i}}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+</font>
+
+
+
+
+<div>
+    <div style="width:20%;padding:0;margin:0;float:left;box-sizing:border-box;" align="center">
+        <input type="button" value='&larr;' {% if current_page == 1%}disabled="true" {% endif%} onclick="toPage('{{current_page-1}}')">
+    </div>
+    <div style="width:60%;padding:0;margin:0;float:left;box-sizing:border-box;" align="center">
+        <input id="page_number" type="number" value="{{current_page}}" min="1" max="{{max_page}}" style="text-align:right" onkeydown="toCertainPage(event)"> / {{max_page}}
+    </div>  
+    <div style="width:20%;padding:0;margin:0;float:left;box-sizing:border-box;" align="center">
+        <input type="button" value='&rarr;' {% if current_page == max_page%} disabled="true" {% endif%} onclick="toPage('{{current_page+1}}')">
+    </div>  
+</div>
+
+</body>
+
+
+{% endblock %}

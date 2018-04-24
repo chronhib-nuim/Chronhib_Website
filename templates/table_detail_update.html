@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block head %}
+<title></title>
+{% set rowid = data["ID_unique_number"]%}
+<script type="text/javascript">
+    window.onload=function(){
+        {%for d in data%}
+        var ele=document.getElementById("td_{{d}}");
+        if(ele){
+            ele.addEventListener('input',function(){
+                var value=document.getElementById("td_{{d}}").innerHTML;
+                document.getElementById("{{d}}").value=value;
+            });
+        }
+        {%endfor%}
+    };
+
+    function post_to_server(){
+        var form=$("#data-form");
+        var url = form.attr('action'); 
+        console.log(form.serialize());
+        $.post(url, form.serialize(),function(data){
+            if(data.hasOwnProperty("error")){
+                alert(data["error"]);
+            }
+            else{
+                window.location.href='/{{table_name}}/'+data["success"]+'/'
+            }
+        });
+        
+        return false;
+    };
+
+    function confirm_del(){
+        var r = confirm("Are you sure you want to delete this record?");
+        if(r){
+            $.post('/{{table_name}}/update/delete',{rowid:"{{data['ID_unique_number']}}"},function(data){
+                if(data.hasOwnProperty("error")){
+                    alert(data["error"]);
+                }
+                else{
+                    window.location.href='/{{table_name}}/'
+                }
+            })
+        }
+        else{
+            console.log('cancel');
+        }
+
+    };
+    function backToDetail(){
+        row_id="{{data['ID_unique_number']}}";
+        window.location.href='/{{table_name}}/'+row_id+"/";
+    };
+
+</script>
+<style type="text/css">
+    
+    .foot-vertical-container{
+        height: 100px;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-align-items: center;
+        align-items: center;
+        -webkit-justify-content: center;
+        justify-content: center;
+    }
+
+</style>
+
+{% endblock %}
+
+{% block body %}
+<body>
+<ul>
+    <li class='li-left'><a onclick="window.location.href='/'">Home</a></li>
+    <div class="dropdown li-left">
+      <a class="dropbtn active" href="/{{table_name}}/">{{table_name}}</a>
+      <div class="dropdown-content">
+        {% for t in other_tables%}
+        <a href="/{{t}}/">{{t}}</a>
+        {% endfor%}
+      </div>
+    </div>
+
+    
+    <li class='li-left'><a href="/{{table_name}}/{{data['ID_unique_number']}}/">Back</a></li>
+    <li class='li-right' onclick="user_logout()"><a>Logout</a></li>
+    
+</ul>
+
+<div align="center" style="height: auto">
+<form id="data-form" action="/{{table_name}}/update/update" method="post" onsubmit="return post_to_server();">
+    <table border="1" width="70%" style="height: auto;font-size:30px;">
+        {% for d in data%}
+        {% if d !="ID_unique_number"%}
+        <tr>
+            <td width="25%">{{d|remove_underline}}</td>
+            <td width="75%" style="height: auto;word-break:break-all" contenteditable="true" id="td_{{d}}">{{data[d]}}</td>
+            <input type="text" name="{{d}}" id="{{d}}" style="visibility: hidden;" value="{{data[d]}}">
+        </tr>
+        {% else %}
+        <tr>
+            <td width="25%">{{d}}</td>
+            <td width="75%" align="center" style="cursor: pointer;">{{data[d]}} (auto-generate)</td>
+            <input type="text" name="rowid" id="{{d}}" style="visibility: hidden;" value="{{data[d]}}">
+        </tr>
+        {%endif%}
+        {%endfor%}
+        
+    </table>
+    <br>
+</form>
+<div>
+    <div style="width:50%;height: auto;float:left;" align="center"><button class="button button-pill button-primary" type="submit">Update</button></div>
+
+    <div style="width:50%;height: auto;float:left;" align="center"><a onclick="confirm_del()" class="button button-pill button-primary ">Delete</a></div>
+</div>
+<br><br><br>
+<div>
+    <div style="width:50%;height: auto;float:left;" align="center">
+        <form id="reset_form" action="/{{table_name}}/update/" method="post">
+            <input type="text" name="rowid" value="{{data['ID_unique_number']}}" style="display: none">
+            <a onclick="document:reset_form.submit();" class="button button-pill button-primary ">Reset</a>
+        </form>
+    </div>
+
+    <div style="width:50%;height: auto;float:left;" align="center"><button class="button button-pill button-primary" onclick="backToDetail()"> Back </button></div>
+</div>
+</div>
+
+
+
+</body>
+
+{% endblock %}

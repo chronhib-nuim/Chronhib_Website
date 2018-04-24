@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block head %}
+<head>
+    <title></title>
+    <script type="text/javascript">
+        function post_to_server() {
+            var form=$("#data-form");
+            var url = form.attr('action'); 
+            $.post(url, form.serialize(),function(data) {
+                console.log(data);
+            });
+            return false;
+        };
+        function prevent_enter(event){
+            if(event.keyCode==13){
+                var form=$("#data-form")
+                console.log(form.serialize());
+                return false;
+            }
+        }
+    </script>
+</head>
+{% endblock %}
+{% block body %}
+<body>
+<form id="data-form" action="/test/add_new" method="post" onsubmit="return post_to_server();" onkeydown="return prevent_enter(event);">
+    <table>
+        <tr>
+            <td>1</td>
+            <td><input type="text" name="1">*</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td><input type="text" name="2"></td>
+        </tr>
+
+        <tr>
+            <td>3</td>
+            <td><input type="text" name="3"></td>
+        </tr>
+
+        <tr>
+            <td>4</td>
+            <td><input type="text" name="4"></td>
+        </tr>
+
+        <tr>
+            <td>5</td>
+            <td><input type="text" name="5"></td>
+        </tr>
+
+        <tr>
+            <td>6</td>
+            <td><input type="text" name="6"></td>
+        </tr>
+
+    </table>
+    <input type="submit" value="OK">
+</form>
+</body>
+{% endblock %}

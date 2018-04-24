@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block head %}
+<title>Result</title>
+<style type="text/css">
+  .result-row{
+    cursor: pointer;
+  }
+  .result-row:hover{
+    background-color: #48D1CC;
+  }
+</style>
+{% endblock %}
+{% block body %}
+<body onkeydown>
+
+<ul>
+    <li class='li-left'><a onclick="window.location.href='/'">Home</a></li>
+    <div class="dropdown li-left">
+      <a class="dropbtn">Tables</a>
+      <div class="dropdown-content">
+        {% for t in tables%}
+        <a href="/{{t}}/">{{t}}</a>
+        {% endfor%}
+      </div>
+    </div>
+    {% if is_login %}
+    <li class='li-right' onclick="user_logout()"><a>Logout</a></li>
+    {% else %}
+    <li class='li-right' ><a href="/login/">Login</a></li>
+    {% endif %}
+</ul>
+<h1 align="center"><a onclick="$('#sql_from').slideToggle('fast');" style="cursor: pointer">Your SQL</a></h1>
+
+<div style="width: 100%;height:auto;" align="center">
+    
+    <form id='sql_from'>
+    <div style="width: 40%;height:auto;">
+      <textarea class="form-control" name="sql" rows="3" style="width: 100%;background:transparent;font-size:1.8em;border-radius:0.5em;" >{{sql}}</textarea>
+    </div>
+    <button type="submit" formmethod="post" formaction="/result/">query</button>
+    </form>
+  </div>
+<h1 align="center">{{title}}</h1>
+{% if data%}
+<div style="overflow:scroll; height: 600px; width:100%;" align="center">
+  <div style="width: 90%">
+    <table border="1">
+      {%if t_heads%}
+        <tr>
+          {% for th in t_heads%}
+          <td align="center"><b><em>col{{th+1}}</em></b></td>
+          {%endfor%}
+        </tr>
+        {%endif%}
+        {% for line in data%}
+        <tr class="result-row">
+          {% for i in line%}
+          <td >{{i}}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      
+    </table>
+    </div>
+  </div>
+  
+  {%endif%}
+
+  {%if error%}
+  <em><h1 align="center">Error:</h1></em>
+  <em><h2 align="center">{{error}}</h2></em>
+    {%endif%}
+</body>
+
+
+{% endblock %}

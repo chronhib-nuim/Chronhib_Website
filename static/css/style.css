@@ -1,0 +1,104 @@
+body {margin:0;}
+
+ul{
+list-style-type:none;
+margin:0;
+padding:0;
+overflow:hidden;
+background-color:#333;
+}
+
+.li-left{
+float:left;
+text-align: center;
+}
+.li-right{
+float:right;
+text-align: center;
+}
+
+li a
+{
+    cursor: pointer;
+    display:inline-block;
+    color:white;
+    text-align:center;
+    padding:14px 16px;
+    text-decoration:none;
+}
+.dropbtn
+{
+    cursor: pointer;
+    display:inline-block;
+    color:white;
+    text-align:center;
+    padding:14px 16px;
+    text-decoration:none;
+}
+
+li a:hover, .dropdown:hover
+{
+background-color:#515151;
+}
+
+.dropdown
+{
+    cursor: pointer;
+    display:inline-block;
+}
+
+.dropdown-content
+{
+display:none;
+position:absolute;
+background-color:#f9f9f9;
+min-width:160px;
+box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);
+float: right;
+}
+
+.dropdown-content a
+{
+color:black;
+padding:12px 16px;
+text-decoration:none;
+display:block;
+text-align: center;
+
+}
+
+.dropdown-content a:hover {background-color: #f1f1f1}
+
+.dropdown:hover .dropdown-content
+{
+display:block;
+}
+
+
+.active {
+    background-color: #141414;
+}
+#row_number{
+    text-align:right;
+    vertical-align:middle;
+
+
+}
+
+.otherwords {
+    cursor:pointer;
+}
+.otherwords:hover {
+    background-color: #48D1CC;
+} 
+
+.symbols_table {
+    cursor:pointer;
+}
+
+@import url(https://fonts.googleapis.com/css?family=Roboto:400,500,300,700);
+body{
+  background: -webkit-linear-gradient(left, #25c481, #25b7c4);
+  background: linear-gradient(to right, #25c481, #25b7c4);
+  font-family: 'Roboto', sans-serif;
+}

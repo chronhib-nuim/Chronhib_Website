@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{%set current_row=dict_working["current_row"]%}
+{%set total_rows=dict_working['total_rows']%}
+
+{% block head %}
+<title>Working</title>
+<script type="text/javascript">
+    function changeRowByArrowKey(event){
+        //make sure the cursor is not in any input field
+        if(!$(event.target).is('input')&&!$(event.target).is('textarea')){
+            // left arrow
+            if( (event.keyCode==37||event.which==37)&&("{{current_row}}">1) ){
+                window.location.href='?row_number={{current_row-1}}&from_row={{current_row}}';
+            };
+            // right arrow
+            if( (event.keyCode==39||event.which==39)&&(parseInt("{{current_row}}")<parseInt("{{total_rows}}")) ){
+                window.location.href='?row_number={{current_row+1}}&from_row={{current_row}}';
+            };  
+        }
+
+        
+    };
+
+    
+    
+    function toCertainRow(event){
+        var row_input = $("#row_number");
+        if(event.keyCode==13||event.which==13){
+            var row_number=row_input.val();
+            row_number=parseInt(row_number);
+            
+            if(row_number==parseInt('{{current_row}}')){
+              row_input.val("{{current_row}}");
+            }
+            else if(row_number<=0 || row_number>parseInt('{{total_rows}}') || isNaN(row_number)){
+              row_input.val("{{current_row}}");
+              Toast("Please input a number within range",500);
+            }
+            else{
+              window.location.href="?row_number="+row_number+"&from_row={{current_row}}";
+            }
+        };
+
+    };
+
+    
+  </script>
+{% endblock %}
+
+{% block body %}
+<body onkeydown="changeRowByArrowKey(event)">
+  <div>
+<ul>
+    <li class='li-left active'><a href="/working/row_number=1">Home</a></li>
+    {% if is_admin %}<li class='li-left'><a onclick="window.location.href='/new_record/'">New Record</a></li>{% endif %}
+    <div class="dropdown li-left">
+      <a class="dropbtn">Tables</a>
+      <div class="dropdown-content">
+        <a href="/morphology/">MORPHOLOGY</a>
+        <a href="/lemmata/">LEMMATA</a>
+        <a href="/sentences/">SENTENCES</a>
+        <a href="/changes/">CHANGES</a>
+      </div>
+    </div>
+    
+    <li class='li-left'><a onclick="showSymbolsTable()">Symbol</a></li>
+    <li class='li-left'>
+        <a>
+        <button style="cursor: pointer;" {%if current_row > 1 %} onclick="window.location.href='?row_number={{current_row-1}}&from_row={{current_row}}'" {%else%} disabled="disabled" {%endif%}>&larr;</button>
+        </a>
+    </li>
+    <li class='li-left'>
+        <a>
+            <input type="number" id="row_number" value="{{current_row}}" placeholder="{{current_row}}" min="1" max="{{total_rows}}" onkeydown="toCertainRow(event)" style="text-align:right">/{{total_rows}}
+        </a>
+    </li>
+
+    <li class='li-left'>
+        <a>
+        <button style="cursor: pointer;" {%if current_row < total_rows %} onclick="window.location.href='?row_number={{current_row+1}}&from_row={{current_row}}'" {%else%} disabled="disabled" {%endif%}>&rarr;</button>
+        </a>
+    </li>
+
+
+
+
+
+
+
+
+
+
+
+
+    <li class='li-left'><a>Update</a></li>
+    {% if is_login %}
+    <li class='li-right' onclick="user_logout()"><a>Logout</a></li>
+    {% else %}
+    <li class='li-right' ><a href="/login/">Login</a></li>
+    {% endif %}
+</ul>
+</div>
+<div style="padding:20px;margin-top:30px;">
+  <div style="width:100%;" align="center">
+    {% block symbol %}
+    {{super()}}
+    {%endblock%}
+  </div>
+
+<div style="width:40%;float:left;">
+  <h1>morphology</h1>
+  <div style="border-style: solid;">
+    
+    <table border="1">
+        
+        {% for col in dict_working['dict_morphology'] %}
+        {% if col != "ID_unique_number"%}
+        {% if col != "Comments"%}
+        <tr>
+            <td style="width: 40%">{{col}} </td>
+            <td style="width: 60%"><input id="morphology_{{col}}" type="text" size="60%" value="{{dict_working['dict_morphology'][col]}}"></td>
+        </tr>
+        {%else%}
+        <tr>
+            <td style="width: 40%">{{col}} </td>
+            <td style="width: 60%"><textarea id="morphology_{{col}}" style="width: 100%;" rows="2">{{dict_working['dict_morphology'][col]}}</textarea></td>
+        </tr>
+        {%endif%}
+        {%endif%}
+        {%endfor%}
+
+    </table>
+    
+  </div>
+ 
+  <h1>Changes (for test only)</h1>
+
+  <div style="overflow:auto;width:100%;height: 300px;border-style: solid;">
+    <br>
+    <table border="1">
+      <tr>
+        {% for col in dict_working['cols_changes'][1:]%}
+        <td>{{col}}</td>
+        {% endfor %}
+      </tr>
+      {% for line in dict_working['data_changes'] %}
+        <tr>
+          {% for e in line[1:]%}
+          <td>{{e}}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+
+    </table>
+    <br>
+  </div>
+</div>
+
+<div style="width:20%;float:left;">
+    <h1></h1>
+
+</div>
+<div style="width:40%;float:left;left:60%" align="center">
+  <h1>lemmata</h1>
+  <div style="border-style: solid;">
+    <table border="1">
+      
+
+      {% for col in dict_working['dict_lemmata'] %}
+      {% if col != "ID_unique_number" %}
+      {% if col != "Comments" and col!="Etymology" %}
+      <tr>
+          <td style="width: 40%">{{col}} </td>
+          <td style="width: 60%"><input id="lemmata_{{col}}" type="text" size="60%" value="{{dict_working['dict_lemmata'][col]}}"></td>
+      </tr>
+      {%else%}
+      <tr>
+          <td style="width: 40%">{{col}} </td>
+          <td style="width: 60%"><textarea id="lemmata_{{col}}" style="width: 100%" rows="2" >{{dict_working['dict_lemmata'][col]}}</textarea></td>
+      </tr>
+      {%endif%}
+      {%endif%}
+      {%endfor%}
+    </table>
+    
+  </div>
+  <br>
+  <div style="border-style: solid;">
+    <div style="border-bottom-style:solid; "><p>Other words with lemma "{{dict_working['dict_lemmata']['Lemma']}}"</p></div>
+    
+    <div style="overflow:auto;width:100%;height: 150px;">
+      <br>
+      <table border="1">
+        <tr>
+          <td width="25%">Word</td>
+          <td width="25%">SentenceID</td>
+          <td width="25%">Expected_Morph</td>
+          <td width="25%">Analysis</td>
+        </tr>
+        
+        {% for line in dict_working['other_words_with_lemmata'] %}
+        <tr class='otherwords' onclick="window.location.href='?row_number={{line[0]}}'">
+          {% for e in line[1:] %}
+          <td>{{e}}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+  <h1>SENTENCES</h1>
+  <div style="border-style: solid;">
+    <br>
+    <table border="1">
+      {% for col in dict_working['dict_sentences'] %}
+      {% if col != "ID_unique_number" %}
+      {% if col != "Translation" and col != "Sentence"%}
+      <tr>
+          <td style="width: 40%">{{col}}</td>
+          <td style="width: 60%"><input id="sentences_{{col}}" type="text" size="60%" value="{{dict_working['dict_sentences'][col]}}"></td>
+      </tr>
+      {% else %}
+      <tr>
+          <td style="width: 40%">{{col}} </td>
+          <td style="width: 60%"><textarea id="sentences_{{col}}" rows="2" style="width: 100%">{{dict_working['dict_sentences'][col]}}</textarea></td>
+      </tr>     
+      {% endif %}
+      {% endif %}
+      {% endfor%}
+    </table>
+  </div>
+  <br>
+  <div style="border-style: solid;">
+    <div style="border-bottom-style:solid; "><p>Other words with SentenceID "{{dict_working['dict_sentences']['SentenceID']}}"</p></div>
+    
+    <div style="overflow:auto;width:100%;height: 150px;">
+      <br>
+      <table border="1">
+        <tr>
+          <td width="20%">Word</td>
+          <td width="20%">lemmata</td>
+          <td width="25%">For_Syntax_Tree</td>
+          <td width="25%">PortalRecordNumber</td>
+        </tr>
+        {% for line in dict_working['other_words_with_sentenceid'] %}
+        <tr class='otherwords' onclick="window.location.href='?row_number={{line[0]}}'">
+          {% for e in line[1:] %}
+          <td>{{e}}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+</body>
+{% endblock %}

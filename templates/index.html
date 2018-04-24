@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+
+
+{% block head %}
+<title>Working</title>
+
+<script type="text/javascript">
+
+    window.onload=function(){
+        {%for col in dict_working['dict_morphology']%}
+        var ele=document.getElementById("td_morphology_{{col}}");
+        if(ele){
+            ele.addEventListener('input',function(){
+                var value=document.getElementById("td_morphology_{{col}}").innerHTML;
+                document.getElementById("morphology_{{col}}").value=value;
+            });
+        }
+        {%endfor%}
+    };
+
+
+
+    function confirm_del(){
+        var r = confirm("Are you sure you want to delete this record?");
+        if(r){
+          var rowid=document.getElementById("morphology_ID_unique_number").value
+            $.post('/working/delete',{rowid:rowid},function(data){
+                if(data.hasOwnProperty("error")){
+                    alert(data["error"]);
+                }
+                else{
+                    window.location.href='/working/';
+                }
+            })
+        }
+        else{
+            console.log('cancel');
+        }
+
+    };
+
+    function changeRowByArrowKey(event){
+        //make sure the cursor is not in any input field
+        if(!$(event.target).is('input')&&!$(event.target).is('textarea')){
+          console.log("{{min_row}}");
+          console.log("{{current_row}}");
+          console.log(parseInt("{{current_row}}")>parseInt("{{min_row}}"));
+            // left arrow
+            if( (event.keyCode==37||event.which==37)&&(parseInt("{{current_row}}")>parseInt("{{min_row}}")) ){
+                window.location.href='?row_number={{current_row-1}}&from_row={{current_row}}';
+            };
+            // right arrow
+            if( (event.keyCode==39||event.which==39)&&(parseInt("{{current_row}}")<parseInt("{{total_rows}}")) ){
+                window.location.href='?row_number={{current_row+1}}&from_row={{current_row}}';
+            };  
+        }
+
+        
+    };
+
+    
+    
+    function toCertainRow(event){
+        var row_input = $("#row_number");
+        if(event.keyCode==13||event.which==13){
+            var row_number=row_input.val();
+            row_number=parseInt(row_number);
+            
+            if(row_number==parseInt('{{current_row}}')){
+              row_input.val("{{current_row}}");
+            }
+            else if(row_number<="min_row" || row_number>parseInt('{{total_rows}}') || isNaN(row_number)){
+              row_input.val("{{current_row}}");
+              Toast("Please input a number within range",500);
+            }
+            else{
+              window.location.href="?row_number="+row_number+"&from_row={{current_row}}";
+            }
+        };
+
+    };
+
+    
+  </script>
+{% endblock %}
+
+{% block body %}
+<body onkeydown="changeRowByArrowKey(event)">
+  <div>
+<ul>
+    <li class='li-left active'><a href="/working/row_number=1">Home</a></li>
+    {% if is_admin %}<li class='li-left'><a onclick="window.location.href='/new_record/'">New Record</a></li>{% endif %}
+    <div class="dropdown li-left">
+      <a class="dropbtn">Tables</a>
+      <div class="dropdown-content">
+        <a href="/morphology/">MORPHOLOGY</a>
+        <a href="/lemmata/">LEMMATA</a>
+        <a href="/sentences/">SENTENCES</a>
+        <a href="/changes/">CHANGES</a>
+      </div>
+    </div>
+    
+    <li class='li-left'><a onclick="showSymbolsTable()">Symbol</a></li>
+    <li class='li-left'>
+        <a>
+        <button style="cursor: pointer;" {%if current_row > min_row %} onclick="window.location.href='?row_number={{current_row-1}}&from_row={{current_row}}'" {%else%} disabled="disabled" {%endif%}>&larr;</button>
+        </a>
+    </li>
+    <li class='li-left'>
+        <a>
+            <input type="number" id="row_number" value="{{current_row}}" placeholder="{{current_row}}" min="1" max="{{total_rows}}" onkeydown="toCertainRow(event)" style="text-align:right">/{{total_rows}}
+        </a>
+    </li>
+
+    <li class='li-left'>
+        <a>
+        <button style="cursor: pointer;" {%if current_row < total_rows %} onclick="window.location.href='?row_number={{current_row+1}}&from_row={{current_row}}'" {%else%} disabled="disabled" {%endif%}>&rarr;</button>
+        </a>
+    </li>
+
+
+    {% if is_login %}
+    <li class='li-right' onclick="user_logout()"><a>Logout</a></li>
+    {% else %}
+    <li class='li-right' ><a href="/login/">Login</a></li>
+    {% endif %}
+</ul>
+</div>
+<div style="padding:20px;margin-top:30px;">
+  <div style="width:100%;" align="center">
+    {% block symbol %}
+    {{super()}}
+    {%endblock%}
+  </div>
+{%if dict_working %}
+<div style="width:50%;float:left;">
+  <h1>morphology</h1>
+<form action="/working/update" method="post">
+  <div style="border-style: solid;">
+    
+    <table border="1" width="100%" cellspacing="0">
+        
+        {% for col in dict_working['dict_morphology'] %}
+        {% if col != "ID_unique_number"%}
+        
+        <tr>
+            <td width="35%">{{col}}</td>
+            <td width="65%" style="height: auto;word-break:break-all;background-color: #CCFFFF" contenteditable="true" id="td_morphology_{{col}}">{{dict_working['dict_morphology'][col]}}</td>
+            <input type="text" name="{{col}}" id="morphology_{{col}}" style="display: none;" value="{{dict_working['dict_morphology'][col]}}">
+        </tr>
+        {%else%}
+        <input type="text" name="rowid" id="morphology_{{col}}" style="display: none;" value="{{dict_working['dict_morphology'][col]}}">
+        {%endif%}
+        {%endfor%}
+
+    </table>
+    
+  </div>
+ 
+  <div style="overflow:auto;width:100%;">
+    <br>
+    <div style="width:50%;height: auto;float:left;" align="center"><button class="button button-pill button-primary" type="submit">Update</button></div>
+</form>
+
+    <div style="width:50%;height: auto;float:left;" align="center"><a onclick="confirm_del()" class="button button-pill button-primary">Delete</a></div>
+
+
+  </div>
+
+</div>
+
+<div style="width:10%;float:left;">
+    <h1></h1>
+
+</div>
+<div style="width:40%;float:left;left:60%" align="center">
+  <h1>lemmata</h1>
+  <div style="border-style: solid;">
+    <table border="1" width="95%">
+      
+
+      {% for col in dict_working['dict_lemmata'] %}
+      {% if col != "ID_unique_number" %}
+      <tr>
+          <td width="30%">{{col}}</td>
+          <td width="70%" style="height: auto;word-break:break-all">{{dict_working['dict_lemmata'][col]}}</td>
+      </tr>
+      
+      {%endif%}
+      {%endfor%}
+    </table>
+    
+  </div>
+  <br>
+  <div style="border-style: solid;">
+    <div style="border-bottom-style:solid; "><p>Other words with lemma "{{dict_working['dict_lemmata']['Lemma']}}"</p></div>
+    
+    <div style="overflow:auto;width:100%;height: 150px;">
+      <br>
+      <table border="1">
+        <tr>
+          <td width="25%">Word</td>
+          <td width="25%">SentenceID</td>
+          <td width="25%">Expected_Morph</td>
+          <td width="25%">Analysis</td>
+        </tr>
+        
+        {% for line in dict_working['other_words_with_lemmata'] %}
+        <tr class='otherwords' onclick="window.location.href='?row_number={{line[0]}}'">
+          {% for e in line[1:] %}
+          <td>{{e}}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+  <h1>SENTENCES</h1>
+  <div style="border-style: solid;">
+    <br>
+    <table width="95%" border="1">
+      {% for col in dict_working['dict_sentences'] %}
+      {% if col != "ID_unique_number" %}
+      <tr>
+          <td width="30%">{{col}}</td>
+          <td width="70%">{{dict_working['dict_sentences'][col]}}</td>
+      </tr>
+      {% endif %}
+      {% endfor%}
+    </table>
+  </div>
+  <br>
+  <div style="border-style: solid;">
+    <div style="border-bottom-style:solid; "><p>Other words with SentenceID "{{dict_working['dict_sentences']['SentenceID']}}"</p></div>
+    
+    <div style="overflow:auto;width:100%;height: 150px;">
+      <br>
+      <table border="1">
+        <tr>
+          <td width="20%">Word</td>
+          <td width="20%">lemmata</td>
+          <td width="25%">For_Syntax_Tree</td>
+          <td width="25%">PortalRecordNumber</td>
+        </tr>
+        {% for line in dict_working['other_words_with_sentenceid'] %}
+        <tr class='otherwords' onclick="window.location.href='?row_number={{line[0]}}'">
+          {% for e in line[1:] %}
+          <td>{{e}}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
+</div>
+</div>
+{%endif%}
+</body>
+{% endblock %}

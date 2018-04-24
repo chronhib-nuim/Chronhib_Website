@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block head %}
+<title>New Record</title>
+
+<script type="text/javascript">
+    var current_id='';
+
+    function setID(id){
+        this.current_id=id;
+        console.log(this.current_id)
+    };
+
+    function setText(value){
+        if(this.current_id != ''){
+            var inputtext = $("#"+this.current_id);
+            var text = inputtext.val();
+            var new_text = text + value
+            console.log(new_text)
+            inputtext.val(new_text);
+            
+        }
+    };
+    
+
+    function queryLemma(event){
+        if(event.keyCode==13||event.which==13){
+            var hdword = $("#morphology_Lemma").val();
+            if(hdword.length>0){
+                $.getJSON('/new_record/_query_lemmata?lemma='+encodeURIComponent(hdword),function(data){
+                    if(jQuery.isEmptyObject(data)){
+                        Toast("Found no record with lemma '"+hdword+"'",1000);
+                    }
+                    else{
+                        for(var d in data){
+                            $("#lemmata_"+d).val(data[d]);
+                            
+                        }
+                    }
+                    
+                });
+            }
+        };
+    };
+    function querySentenceID(event){
+        if(event.keyCode==13||event.which==13){
+            var sentenceid = $("#morphology_SentenceID").val();
+            if(sentenceid.length>0){
+                $.getJSON('/new_record/_query_sentence?sentenceid='+encodeURIComponent(sentenceid),function(data){
+                    if(jQuery.isEmptyObject(data)){
+                        Toast("Found no record with SentenceID '"+sentenceid+"'",1000);
+                    }
+                    else{
+                        for(var d in data){
+                            $("#sentences_"+d).val(data[d]);
+                            
+                        }
+                    }
+                    
+                });
+            }
+        };
+    };
+
+    function post_to_server() {
+        var form=$("#data-form");
+        console.log(form.serialize());
+        $.post("/new_record/insert", form.serialize(),function(data) {
+            if(data.hasOwnProperty("error")){
+                alert(data["error"]);
+            }
+            else{
+                window.location.href='/working/?row_number='+data["success"]+"&from_row=1"
+            }
+            
+        });
+        
+        return false;
+    };
+</script>
+{% endblock %}
+
+{% block body %}
+
+<ul>
+    <li class='li-left'><a onclick="window.location.href='/'">Home</a></li>
+    <li class='li-left active'><a>New Record</a></li>
+    <div class="dropdown li-left">
+      <a class="dropbtn">Tables</a>
+      <div class="dropdown-content">
+        <a href="/morphology/">MORPHOLOGY</a>
+        <a href="/lemmata/">LEMMATA</a>
+        <a href="/sentence/">SENTENCES</a>
+        <a href="/changes/">CHANGES</a>
+      </div>
+    </div>
+    <li class='li-left'><a onclick="showSymbolsTable()">Symbol</a></li>
+    
+    <li class='li-left'></li>
+    <li class='li-right' onclick="user_logout()"><a>Logout</a></li>
+</ul>
+
+<div style="padding:20px;margin-top:30px;">
+
+
+<div style="width:100%;" align="center">
+{% block symbol %}
+{{super()}}
+{% endblock %}
+</div>
+
+
+
+<!-- <form id="data-form" action="/add_new/insert" method="post" onsubmit="return post_to_server();"> -->
+
+<div style="width:40%;float:left;">
+  <h1>Morphology</h1>
+  
+  <div style="border-style: solid;">
+
+    <table border="1">
+      {% for col in cols_morphology %}
+        {% if col != "ID_unique_number"%}
+        {% if col != "Comments"%}
+        <tr>
+            <td style="width: 40%;">{%if col in not_empty%} <b>{{col}}</b> {%else%} {{col}} {%endif%} </td>
+            <td ><input id="morphology_{{col}}" name="{{col}}" type="text" size="60%" onfocus="setID('morphology_{{col}}')" {%if col=="Lemma" or col == "SentenceID"%} onkeydown="query{{col}}(event)"{%endif%}></td>
+        </tr>
+        {%else%}
+        <tr>
+            <td style="width: 40%">{{col}} </td>
+            <td ><textarea id="morphology_{{col}}" name="{{col}}" style="width: 100%" rows="2" onfocus="setID('morphology_{{col}}')" ></textarea></td>
+        </tr>
+        {%endif%}
+        {%endif%}
+        {%endfor%}
+      </table>
+    
+
+
+ 
+   <!-- </form> -->
+
+
+
+
+
+
+  </div>
+  <div align="center">
+    <br>
+    <button class="button button-primary button-rounded button-small" type="submit">Submit</button>
+  </div>
+
+</div>
+
+
+
+
+
+
+<div style="width:20%;float:left;">
+    <h1>&emsp;</h1>
+</div>
+
+
+
+
+
+<div style="width:40%;float:left;left:60%" align="center">
+  <h1>Lemmata</h1>
+  <div style="border-style: solid;">
+    <table border="1">
+      
+
+      {% for col in cols_lemmata %}
+      {% if col != "ID_unique_number" %}
+      {% if col != "Comments" and col!="Etymology" %}
+      <tr>
+          <td style="width: 40%">{{col}} </td>
+          <td ><input id="lemmata_{{col}}" type="text" size="60%" onfocus="setID('lemmata_{{col}}')" ></td>
+      </tr>
+      {%else%}
+      <tr>
+          <td style="width: 40%">{{col}} </td>
+          <td style="width: 60%"><textarea id="lemmata_{{col}}" style="width: 100%" rows="2" onfocus="setID('lemmata_{{col}}')" ></textarea></td>
+      </tr>
+      {%endif%}
+      {%endif%}
+      {%endfor%}
+    </table>
+    
+  </div>
+
+  <br>
+  
+
+  <h1>SENTENCES</h1>
+  <div style="border-style: solid;">
+    <br>
+    <table border="1">
+      {% for col in cols_sentences %}
+      {% if col != "ID_unique_number" %}
+      {% if col != "Translation" and col != "Sentence"%}
+      <tr>
+          <td style="width: 40%">{{col}}</td>
+          <td ><input id="sentences_{{col}}" type="text" size="60%" style="height:20px;" onfocus="setID('sentences_{{col}}')" onchange="showUpdateButton(event)"></td>
+      </tr>
+      {% else %}
+      <tr>
+          <td style="width: 40%">{{col}} </td>
+          <td style="width: 60%"><textarea id="sentences_{{col}}" style="width: 100%" rows="2" onfocus="setID('sentences_{{col}}')" onchange="showUpdateButton(event)"></textarea></td>
+      </tr>     
+      {% endif %}
+      {% endif %}
+      {% endfor%}
+    </table>
+  </div>
+  <br>
+  <h1>Changes (for test only)</h1>
+  <div style="overflow:auto;width:100%;height: 300px;border-style: solid;">
+    <br>
+    
+
+    <br>
+  </div>
+
+</div>
+</div>
+
+{% endblock %}

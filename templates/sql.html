@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+<head>
+{% block head %}
+<script type="text/javascript">
+    
+</script> 
+{% endblock %}
+
+</head>
+{% block body %}
+<body>
+<div>
+    <ul>
+    <li class='li-left'><a onclick="window.location.href='/'">Home</a></li>
+    <div class="dropdown li-left">
+      <a class="dropbtn">Tables</a>
+      <div class="dropdown-content">
+        {% for t in tables%}
+        <a href="/{{t}}/">{{t}}</a>
+        {% endfor%}
+      </div>
+    </div>
+    <li class='li-left'><a onclick="showSymbolsTable()">Symbol</a></li>
+    {% if is_login %}
+    <li class='li-right' onclick="user_logout()"><a>Logout</a></li>
+    {% else %}
+    <li class='li-right' ><a href="/login/">Login</a></li>
+    {% endif %}
+    </ul>
+</div>
+<div>
+  <div style="width:100%;" align="center">
+    {% block symbol %}
+    {{super()}}
+    {%endblock%}
+  </div>
+  <div style="width: 100%;height:auto;" align="center">
+    <form>
+    <div style="width: 40%;height:auto;">
+        <h1>Your SQL</h1>
+      <textarea class="form-control" name="sql" rows="3" style="width: 100%;background:transparent;font-size:1.8em;border-radius:0.5em;" placeholder="select * from sqlite_master where type = 'table'"></textarea>
+    </div>
+    
+    <button type="submit" formmethod="post" formaction="/result/">query</button>
+    
+    </form>
+    <br>
+   <div>
+        <div style="width: 50%;">
+            <h3 align="right" ><a onclick="$('#sql-helper').slideToggle('fast');" style="cursor: pointer;"><b><em>sql helper</em></b></a></h3>
+        </div>
+    </div>
+    <br>
+     <div style="width:100%;">
+        <div id="sql-helper"  style="border-style: solid;display: none;">
+        <table border="1">
+            <tr>
+                <td align="center">Name</td>
+                <td align="center">Structure</td>
+            </tr>
+            {% for t in table_info%}
+            <tr>
+                {% for info in t%}
+                <td>{{info}}</td>
+                {% endfor%}
+            </tr>
+            {% endfor%}
+        </table>
+        </div>
+    </div>
+  </div>
+
+
+</body>
+{% endblock %}

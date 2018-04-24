@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block head %}
+<title></title>
+<style type="text/css">
+    .href_td{
+        cursor: pointer;
+        text-decoration:none;
+    }
+    
+    .href_td:link{
+        color: blue;
+    }             
+    .href_td:visited{
+        color: blue;
+    } 
+    .href_td:hover{
+        color: red;
+    }
+    .href_td:active{
+        color: red;
+    } 
+    .foot-vertical-container{
+        height: 100px;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-align-items: center;
+        align-items: center;
+        -webkit-justify-content: center;
+        justify-content: center;
+    }
+
+</style>
+<script type="text/javascript">
+    function toPage(page){
+        window.location.href="/{{table_name}}/"+page+"/"
+    };
+
+    function changeRowByArrowKey(event){
+        //make sure the cursor is not in any input field
+        if(!$(event.target).is('input')&&!$(event.target).is('textarea')){
+            // left arrow
+            if( (event.keyCode==37||event.which==37)&&("{{current_rowid}}">1) ){
+                toPage("{{current_rowid-1}}");
+            };
+            // right arrow
+            if( (event.keyCode==39||event.which==39)&&(parseInt("{{current_rowid}}")<parseInt("{{total_rows}}")) ){
+                toPage("{{current_rowid+1}}");
+            };  
+        }
+      };
+      function toCertainPage(event){
+        var page_input = $("#page_number");
+        if(event.keyCode==13||event.which==13){
+            var page_number=page_input.val();
+            page_number=parseInt(page_number);
+            
+            if(page_number==parseInt('{{current_rowid}}')){
+              page_input.val("{{current_rowid}}");
+            }
+            else if(page_number<=0 || page_number>parseInt('{{total_rows}}') || isNaN(page_number)){
+              page_input.val("{{current_rowid}}");
+              Toast("Please input a number within range",500);
+            }
+            else{
+              toPage(page_number);
+            }
+
+           
+        };
+
+    };
+
+    function backToWorking(){
+        row_id="{{data['ID_unique_number']}}";
+        window.location.href='/working/?row_number='+row_id;
+    };
+    
+</script>
+{% endblock %}
+
+{% block body %}
+<body onkeydown="changeRowByArrowKey(event)">
+<ul>
+    <li class='li-left'><a onclick="window.location.href='/'">Home</a></li>
+    <div class="dropdown li-left">
+      <a class="dropbtn active" href="/{{table_name}}/">{{table_name}}</a>
+      <div class="dropdown-content">
+        {% for t in other_tables%}
+        <a href="/{{t}}/">{{t}}</a>
+        {% endfor%}
+      </div>
+    </div>
+    <li class='li-left'>
+        <a>
+        <button style="cursor: pointer;" {%if current_rowid > 1 %} onclick="toPage({{current_rowid-1}})" {%else%} disabled="disabled" {%endif%}>&larr;</button>
+        </a>
+    </li>
+    <li class='li-left'>
+        <a>
+            <input type="number" id="page_number" value="{{current_rowid}}" placeholder="{{current_rowid}}" min="1" max="{{total_rows}}" onkeydown="toCertainPage(event)" style="text-align:right">/{{total_rows}}
+        </a>
+    </li>
+
+    <li class='li-left'>
+        <a>
+        <button style="cursor: pointer;" {%if current_rowid < total_rows %} onclick="toPage({{current_rowid+1}})" {%else%} disabled="disabled" {%endif%}>&rarr;</button>
+        </a>
+    </li>
+    {% if is_admin %}
+    <li class='li-left'><a href="/{{table_name}}/add_new/">Add New</a></li>
+    {% if table_name != "MORPHOLOGY" and data%}
+    <form id="update_form" action="/{{table_name}}/update/" method="post">
+    <li class='li-left'><a onclick="document:update_form.submit();">Update</a></li>
+    <input type="text" name="rowid" value="{{current_rowid}}" style="display: none">
+    </form>
+    {%elif table_name == "MORPHOLOGY"%}
+    <li class='li-left'><a onclick="backToWorking()">Update</a></li>
+    {%endif%}
+    {%endif%}
+    {% if is_login %}
+    <li class='li-right' onclick="user_logout()"><a>Logout</a></li>
+    {% else %}
+    <li class='li-right' ><a href="/login/">Login</a></li>
+    {% endif %}
+</ul>
+
+<div align="center" style="height: auto">
+    {% if data%}
+    
+    <table border="1" width="70%" style="height: auto;font-size:30px;">
+        
+        {% for d in data %}
+        {% if d != "ID_unique_number" %}
+        <tr>
+            {% if d in innerHTML%}
+            <td width="25%"><b>{{d|remove_underline}}</b></td>
+            <td width="75%" style="height: auto;word-break:break-all" >{{innerHTML[d]|safe}}</td>
+            {% else %}
+            <td width="25%">{{d|remove_underline}}</td>
+            <td width="75%" style="height: auto;word-break:break-all">{{data[d]}}</td>
+            {% endif %}
+            
+        </tr>
+        {% endif %}
+        {% endfor %}
+        
+    </table>
+    
+    {%else%}
+    <h1>id out of range</h1>
+    {%endif%}
+    
+</div>
+{% if words_with_lemmata%}
+
+<h2 align="center">Words with this lemmata</h2>
+<div align="center" style="overflow:auto;height: 250px;" >
+    <table border="1" width="50%">
+        
+       <tr>
+           <td>Word</td>
+           <td>SentenceID</td>
+           <td>Expected_Morph</td>
+           <td>Analysis</td>
+       </tr>
+       {%for line in words_with_lemmata%}
+       <tr onclick="window.location.href='/MORPHOLOGY/{{line[0]}}/'">
+           {%for l in line[1:]%}
+           <td>{{l}}</td>
+           {%endfor%}
+       </tr>
+       {%endfor%}
+        
+    </table>
+
+    
+</div>
+{%endif%}
+
+<div class="foot-vertical-container">
+    
+    <div style="width:20%;padding:0;margin:0;float:left;box-sizing:border-box;" align="center">
+        <input type="button" value='&larr;' {% if current_rowid == 1%}disabled="true" {% endif%} onclick="toPage('{{current_rowid-1}}')">
+    </div>
+    <div style="width:60%;padding:0;margin:0;float:left;box-sizing:border-box;" align="center">
+        <input id="page_number" type="number" value="{{current_rowid}}" min="1" max="{{total_rows}}" style="text-align:right" onkeydown="toCertainPage(event)"> / {{total_rows}}
+    </div>  
+    <div style="width:20%;padding:0;margin:0;float:left;box-sizing:border-box;" align="center">
+        <input type="button" value='&rarr;' {% if current_rowid >= total_rows%} disabled="true" {% endif%} onclick="toPage('{{current_rowid+1}}')">
+    </div>
+
+</div>
+
+</body>
+
+{% endblock %}
