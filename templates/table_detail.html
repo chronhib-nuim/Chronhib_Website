@@ -164,7 +164,7 @@
            <td>Analysis</td>
        </tr>
        {%for line in words_with_lemmata%}
-       <tr onclick="window.location.href='/MORPHOLOGY/{{line[0]}}/'">
+       <tr onclick="window.location.href='/MORPHOLOGY/{{line[0]}}/'" style="cursor: pointer;" class='line'>
            {%for l in line[1:]%}
            <td>{{l}}</td>
            {%endfor%}

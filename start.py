@@ -589,25 +589,6 @@ def user_logout():
     return jsonify({})
 
 
-# @app.route('/headwords/')
-# def show_headwords():
-#     return render_template('headwords.html')
-
-# @app.route('/text/')
-# def show_text():
-#     return render_template('text.html')
-
-# @app.route('/collection/')
-# def show_collection():
-#     return render_template('collection.html')
-
-# @app.route('/changes/')
-# def show_changes():
-#     return render_template('changes.html')
-
-#
-# Flask application helpers.
-#
 
 def getCurrentMaxSentenceID():
     return g.db.execute('select SentenceID from SENTENCES order by cast(substr(SentenceID,7) as integer) desc limit 1').fetchall()[0][0]
@@ -635,7 +616,8 @@ def connect_db():
     if isAdmin:
         return sqlite3.connect('working.sqlite3'),sqlite3.connect('user.sqlite3')
     else:
-        abs_path=os.path.abspath('working.sqlite3')
+        # abs_path=os.path.abspath('working.sqlite3')
+        abs_path=os.path.dirname(os.path.realpath('working.sqlite3'))
         uri_abs_path="file://"+abs_path+'?mode=ro'
         return sqlite3.connect(uri_abs_path,uri=True),sqlite3.connect('user.sqlite3')
         # return sqlite3.connect('file://working.sqlite3?mode=ro',uri=True),sqlite3.connect('user.sqlite3')
