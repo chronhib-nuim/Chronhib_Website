@@ -1,0 +1,4 @@
+__pycache__/
+*.ipynb
+*.sqlite3
+backup/

@@ -14,15 +14,9 @@ DEBUG = True
 MAX_RESULT_SIZE = 1000
 ROWS_PER_PAGE = 100
 SECRET_KEY = 'maynooth_university'
-# special_characters=[['u̯', 'i̯', 'm̄', 'ḟ', '·'], 
-#                     ['ȩ', '⁊', 'ɫ', 'Ȩ', 'ṡ'], 
-#                     ['ā', 'ē', 'ī', 'ō', 'ū'], 
-#                     ['ä', 'ë', 'ï', 'ö', 'ü'], 
-#                     ['ă', 'ĕ', 'ĭ', 'ŏ', 'ŭ'], 
-#                     ['æ', 'Æ', 'ʒ', 'đ', 'ɔ̄'], 
-#                     ['φ', 'þ', 'β', '˜', 'χ'], 
-#                     ['γ', '∅', 'ə', 'ɛ', 'ƀ'], 
-#                     ['θ', 'ð', 'ɣ', 'ɸ', 'β']]
+
+WORKING_DB=os.path.dirname(os.path.realpath(__file__))+'/'+'working.sqlite3'
+USER_DB=os.path.dirname(os.path.realpath(__file__))+'/'+'user.sqlite3'
 
 
 
@@ -31,21 +25,10 @@ app = Flask(
     static_folder=os.path.join(CUR_DIR, 'static'),
     template_folder=os.path.join(CUR_DIR, 'templates'))
 app.config.from_object(__name__)
-dataset = None
-migrator = None
-
-# other functions
-
-# end of other functions
 
 
 
-
-    
-
-#
-# Flask views.
-#
+### Block of template
 @app.template_filter('url_encoder')
 def url_encoder(strs):
     return urllib.parse.quote(strs)
@@ -68,23 +51,9 @@ def hide_primary_key_colunms(source_list):
 @app.template_filter('remove_underline')
 def remove_underline(strs):
     return strs.replace('_',' ')
+### end of  block
 
-
-# @app.errorhandler(404)
-# def page404(e):
-#     error_mes='You have been redirected to homepage because an error occurs, please see the detail:#$# %s'%(e)
-#     print(error_mes)
-#     flash(error_mes)
-#     return redirect(url_for('index'))
-
-# @app.errorhandler(500)
-# def page500(e):
-#     error_mes='You have been redirected to homepage because an error occurs, please see the detail:#$# %s'%(e)
-#     print(error_mes)
-#     flash(error_mes)
-#     return redirect(url_for('index'))
-
-#tbl_morphology
+### Table names
 tbl_morphology="MORPHOLOGY"
 tbl_sentences='SENTENCES'
 tbl_change="CHANGES"
@@ -93,12 +62,12 @@ tbl_text="TEXT"
 table_names=[tbl_morphology,tbl_sentences,tbl_change,tbl_lemmata,tbl_text]
 
 
+### Blcok of route
 
 
 @app.route('/')
 def index():
-    isAdmin = session.get('permission','normal')=='admin'
-    if isAdmin:
+    if checkIfAdmin():
         return redirect('/working/')
     else:
         return redirect('/SENTENCES/')
@@ -106,7 +75,7 @@ def index():
 
 @app.route('/working/')
 def working():
-    isLogin,isAdmin = 'username' in session, session.get('permission','normal')=='admin'
+    isLogin,isAdmin = checkIfLogin(),checkIfAdmin()
     if not isAdmin:
         return redirect('/SENTENCES/')
     dict_working={}
@@ -183,8 +152,7 @@ def working():
 
 @app.route('/working/update',methods=['POST'])
 def working_update():
-    isAdmin = session.get('permission','normal')=='admin'
-    if not isAdmin:
+    if not checkIfAdmin():
         return jsonify({'error':"permission error"})
     form_values=request.form
     rowid=form_values['rowid']
@@ -204,8 +172,7 @@ def working_update():
 
 @app.route('/working/delete',methods=['POST'])
 def working_delete():
-    isAdmin = session.get('permission','normal')=='admin'
-    if not isAdmin:
+    if not checkIfAdmin():
         return jsonify({'error':"permission error"})
     form_values=request.form
     rowid=int(form_values['rowid'])
@@ -219,7 +186,7 @@ def working_delete():
 
 @app.route('/new_record/')
 def new_record():
-    isLogin,isAdmin = 'username' in session, session.get('permission','normal')=='admin'
+    isLogin,isAdmin = checkIfLogin(),checkIfAdmin()
     if not isLogin:
         return redirect(url_for('user_login'))
     if not isAdmin:
@@ -290,7 +257,7 @@ def query_sentences():
 
 @app.route('/<table>/')
 def show_table_list(table):
-    isLogin,isAdmin = 'username' in session, session.get('permission','normal')=='admin'
+    isLogin,isAdmin = checkIfLogin(),checkIfAdmin()
     if table.upper() not in table_names:
         return redirect(url_for('index'))
     t_name=table.upper()
@@ -326,7 +293,7 @@ def show_table_list(table):
 
 @app.route('/<table>/<row_id>/')
 def show_table_detail(table,row_id):
-    isLogin,isAdmin = 'username' in session, session.get('permission','normal')=='admin'
+    isLogin,isAdmin = checkIfLogin(),checkIfAdmin()
     words_with_lemmata=[]
 
     innerHTML,data={},{}
@@ -435,8 +402,7 @@ def table_update(table):
 
 @app.route('/<table>/update/update',methods=['POST'])
 def table_update_confirmed(table):
-    isAdmin = session.get('permission','normal')=='admin'
-    if not isAdmin:
+    if not checkIfAdmin():
         return jsonify({'error':"permission error"})
     t_name=table.upper()
     form_values=request.form
@@ -458,8 +424,7 @@ def table_update_confirmed(table):
 
 @app.route('/<table>/update/delete',methods=['POST'])
 def table_delete_confirmed(table):
-    isAdmin = session.get('permission','normal')=='admin'
-    if not isAdmin:
+    if not checkIfAdmin():
         return jsonify({'error':"permission error"})
     t_name=table.upper()
     form_values=request.form
@@ -473,7 +438,7 @@ def table_delete_confirmed(table):
 
 @app.route('/<table>/add_new/',methods=['GET'])
 def table_add_new(table):
-    isLogin,isAdmin = 'username' in session, session.get('permission','normal')=='admin'
+    isLogin,isAdmin = checkIfLogin(),checkIfAdmin()
     t_name=table.upper()
     next_sentenceID,non_empty,column_names=None,[],[]
     if t_name not in table_names:
@@ -536,8 +501,7 @@ def sql_page():
 
 @app.route("/downloadsqlite",methods=['GET'])
 def downloadSqlite():
-    path='working.sqlite3'
-    return send_file(path, as_attachment=True)
+    return send_file(WORKING_DB, as_attachment=True)
 
 @app.route('/result/',methods=['POST'])
 def sql_result():
@@ -545,7 +509,7 @@ def sql_result():
     print("POST Form values: ",sql_sentence)
     data,error,t_heads,title=[],None,[],'No record found'
     try:
-        data=g.db.execute(sql_sentence).fetchall()[:1000]
+        data=g.db.execute(sql_sentence).fetchall()[:MAX_RESULT_SIZE]
     except Exception as e:
         error=str(e).upper()
     if data:
@@ -589,6 +553,10 @@ def user_logout():
     return jsonify({})
 
 
+def checkIfAdmin():
+    return session.get('permission','normal')=='admin'
+def checkIfLogin():
+    return 'username' in session
 
 def getCurrentMaxSentenceID():
     return g.db.execute('select SentenceID from SENTENCES order by cast(substr(SentenceID,7) as integer) desc limit 1').fetchall()[0][0]
@@ -607,20 +575,15 @@ def getMaxPageNum(total_rows, per_page):
     return pages
 
 
-def escapeSpecialStr(str_o):
-    # .replace('/','//').replace('[','/[').replace(']','/]').replace('%','/%').replace('&','/&').replace('_','/_').replace('(','/(').replace(')','/)').replace('"','/"')
-    return str_o.replace("'","''")
 
 def connect_db():
-    isAdmin=session.get('permission','normal')=='admin'
-    if isAdmin:
-        return sqlite3.connect('working.sqlite3'),sqlite3.connect('user.sqlite3')
+    if checkIfAdmin():
+        return sqlite3.connect(WORKING_DB),sqlite3.connect(USER_DB)
     else:
-        # abs_path=os.path.abspath('working.sqlite3')
-        abs_path=os.path.dirname(os.path.realpath('working.sqlite3'))
-        uri_abs_path="file://"+abs_path+'?mode=ro'
-        return sqlite3.connect(uri_abs_path,uri=True),sqlite3.connect('user.sqlite3')
-        # return sqlite3.connect('file://working.sqlite3?mode=ro',uri=True),sqlite3.connect('user.sqlite3')
+        uri_abs_path="file://"+WORKING_DB+'?mode=ro'
+        print(uri_abs_path)
+        return sqlite3.connect(uri_abs_path,uri=True),sqlite3.connect(USER_DB)
+
 
 @app.before_request
 def before_request():
@@ -714,7 +677,6 @@ def open_browser_tab(host, port):
     thread.start()
 
 def main():
-    # This function exists to act as a console script entry-point.
     from werkzeug.contrib.fixers import ProxyFix
     app.wsgi_app = ProxyFix(app.wsgi_app)
     parser = get_option_parser()
